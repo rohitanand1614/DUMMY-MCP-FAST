@@ -52,6 +52,49 @@ def send_keys(by: str, value: str, text: str):
     ElementActions(driver).send_keys(by, value, text)
     return {"message": f"Sent keys '{text}'"}
 
+# ✅ New input schema for HTML capture
+class CaptureHTMLInput(BaseModel):
+    by: str = Field(..., description="Locator strategy (e.g., 'id', 'xpath', 'css selector')")
+    value: str = Field(..., description="Locator value for the element")
+
+
+
+@app.tool("capture_html")
+def capture_html(input: CaptureHTMLInput):
+    """
+    Capture and return the outer HTML, tag name, and attributes
+    of an element located by the given selector.
+    Useful for generating automation scripts based on actual page structure.
+    """
+    try:
+        data = input.model_dump()
+        driver = browser_manager.get_active_driver()
+        element = ElementActions(driver).find_element(data["by"], data["value"])
+        html_content = element.get_attribute("outerHTML")
+
+        # Extract element attributes using JS
+        attributes = driver.execute_script(
+            """
+            var items = {};
+            for (var i = 0; i < arguments[0].attributes.length; ++i) {
+                items[arguments[0].attributes[i].name] = arguments[0].attributes[i].value;
+            }
+            return items;
+            """,
+            element
+        )
+
+        return {
+            "locator": data,
+            "tag": element.tag_name,
+            "attributes": attributes,
+            "html": html_content.strip() if html_content else "",
+            "message": "Captured HTML and attributes successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to capture HTML: {e}")
+        return {"error": str(e)}
 
 @app.tool("close_session")
 def close_session():
@@ -62,3 +105,4 @@ def close_session():
 
 if __name__ == "__main__":
     app.run()
+

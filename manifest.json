@@ -1,0 +1,10 @@
+{
+  "name": "Selenium MCP Python",
+  "summary": "MCP server for Selenium WebDriver automation",
+  "entry": "run_mcp_selenium.py",
+  "env": {
+    "SELENIUM_DRIVER_PATH": "./drivers/chromedriver.exe",
+    "SELENIUM_BINARY_PATH": "./browsers/chrome.exe",
+    "PYTHONPATH": "."
+  }
+}
